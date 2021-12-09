@@ -2,7 +2,8 @@ name: Check for latest commit every 24 hours
 
 on:
   schedule:
-  - cron: "0 0 * * *" # run every 24 hours
+  - cron: "0 1 * * *" # run every 24 hours
+  workflow_dispatch:
 
 jobs:
   run:
@@ -11,26 +12,27 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Get latest commit and make a file
-      run:
-        git clone https://github.com/wwmm/easyeffects
-        cd easyeffects
-        git switch libadwaita
-        echo "git log -n 1 --pretty=format:"%H"" > latest_easyeffects_commit
-      
-    - name: Commit files
+    - name: Get latest commit and commit it to file
       id: commit
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "github-actions"
-        git add --all
-        if [-z "$(git status --porcelain)"]; then
-           echo "::set-output name=push::false"
+        git clone https://github.com/wwmm/easyeffects
+        cd easyeffects || exit
+        git switch libadwaita
+        latestcommit=$(git log -n 1 --pretty=format:"%H")
+        cd ..
+        if [ "$latestcommit" = "$(cat latest_easyeffects_commit)" ] || [ ! -f latest_easyeffects_commit ]; then
+          echo "::set-output name=push::false"
         else
-           git commit -m "Add changes" -a
-           echo "::set-output name=push::true"
+          touch latest_easyeffects_commit
+          echo "$latestcommit" > latest_easyeffects_commit
+          git config --local user.email "action@github.com"
+          git config --local user.name "github-actions"
+          git add --all
+          git rm --cached easyeffects -f
+          git commit -m "Update to latest EasyEffects commit" -a
+          echo "::set-output name=push::true"
         fi
-      shell: bash
+      
     - name: Push changes
       if: steps.commit.outputs.push == 'true'
       uses: ad-m/github-push-action@master
