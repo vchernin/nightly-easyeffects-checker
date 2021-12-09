@@ -1,0 +1,38 @@
+name: Check for latest commit every 24 hours
+
+on:
+  schedule:
+  - cron: "0 0 * * *" # run every 24 hours
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Get latest commit and make a file
+      run:
+        git clone https://github.com/wwmm/easyeffects
+        cd easyeffects
+        git switch libadwaita
+        echo "git log -n 1 --pretty=format:"%H"" > latest_easyeffects_commit
+      
+    - name: Commit files
+      id: commit
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "github-actions"
+        git add --all
+        if [-z "$(git status --porcelain)"]; then
+           echo "::set-output name=push::false"
+        else
+           git commit -m "Add changes" -a
+           echo "::set-output name=push::true"
+        fi
+      shell: bash
+    - name: Push changes
+      if: steps.commit.outputs.push == 'true'
+      uses: ad-m/github-push-action@master
+      with:
+         github_token: ${{ secrets.GITHUB_TOKEN }}
