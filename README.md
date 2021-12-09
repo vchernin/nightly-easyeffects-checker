@@ -1,3 +1,5 @@
+[![Nightly commit checker status](https://github.com/vchernin/nightly-easyeffects-checker/actions/workflows/nightly-checker.yml/badge.svg)](https://github.com/vchernin/nightly-easyeffects-checker/actions/workflows/nightly-checker.yml)
+
 Fetch the latest [EasyEffects](https://github.com/wwmm/easyeffects) commit every 24 hours.  
 Used by [EasyEffects Flatpak](https://github.com/flathub/com.github.wwmm.easyeffects/)
 
